@@ -1,0 +1,23 @@
+{
+  "name": "trekgear-hub",
+  "version": "1.0.0",
+  "description": "TrekGear Hub - Trekking Gear Rental Management System with Audit Trail",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/run-tests.js",
+    "reset-db": "node scripts/reset-db.js"
+  },
+  "keywords": [
+    "express",
+    "sqlite3",
+    "audit-trail",
+    "trekking-gear"
+  ],
+  "author": "Member 5",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2",
+    "sqlite3": "^5.1.7"
+  }
+}

@@ -1,0 +1,5 @@
+node_modules/
+tests/test_trekgear.db
+tests/test_trekgear.db-journal
+trekgear.db-journal
+.DS_Store
