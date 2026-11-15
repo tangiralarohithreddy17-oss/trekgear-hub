@@ -25,7 +25,20 @@ function initDb(db = null) {
 
   return new Promise((resolve, reject) => {
     activeDb.serialize(() => {
-      // 1. Tents table
+      // 1. Trekkers table
+      activeDb.run(`
+        CREATE TABLE IF NOT EXISTS trekkers (
+          trekker_id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          email TEXT,
+          phone TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+      `, (err) => {
+        if (err) return reject(err);
+      });
+
+      // 2. Tents table
       activeDb.run(`
         CREATE TABLE IF NOT EXISTS tents (
           tent_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,7 +51,24 @@ function initDb(db = null) {
         if (err) return reject(err);
       });
 
-      // 2. Audit table as specified in requirements
+      // 3. Rentals table (The Join table between trekkers and tents)
+      activeDb.run(`
+        CREATE TABLE IF NOT EXISTS rentals (
+          rental_id INTEGER PRIMARY KEY AUTOINCREMENT,
+          trekker_id INTEGER NOT NULL,
+          tent_id INTEGER NOT NULL,
+          rental_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+          return_date DATETIME,
+          status TEXT DEFAULT 'active',
+          notes TEXT,
+          FOREIGN KEY (trekker_id) REFERENCES trekkers(trekker_id) ON DELETE CASCADE,
+          FOREIGN KEY (tent_id) REFERENCES tents(tent_id) ON DELETE CASCADE
+        );
+      `, (err) => {
+        if (err) return reject(err);
+      });
+
+      // 4. Audit table for tracking tent lifecycle modifications
       activeDb.run(`
         CREATE TABLE IF NOT EXISTS audit (
           audit_id INTEGER PRIMARY KEY AUTOINCREMENT,

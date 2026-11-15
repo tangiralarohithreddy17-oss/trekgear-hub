@@ -5,12 +5,31 @@ const router = express.Router();
 
 /**
  * GET /tents
- * Fetch all tents.
+ * Fetches all tents. Supports query filtering:
+ *  - ?size=<size> (e.g. /tents?size=4-person)
+ *  - ?search_q=<keyword> (e.g. /tents?search_q=Mountain)
  */
 router.get('/', async (req, res) => {
   try {
     const db = getDb();
-    const tents = await allAsync(db, 'SELECT * FROM tents ORDER BY tent_id ASC');
+    const { size, search_q } = req.query;
+
+    let sql = 'SELECT * FROM tents WHERE 1=1';
+    const params = [];
+
+    if (size && typeof size === 'string' && size.trim()) {
+      sql += ' AND LOWER(size) = LOWER(?)';
+      params.push(size.trim());
+    }
+
+    if (search_q && typeof search_q === 'string' && search_q.trim()) {
+      sql += ' AND LOWER(tent_name) LIKE ?';
+      params.push(`%${search_q.trim().toLowerCase()}%`);
+    }
+
+    sql += ' ORDER BY tent_id ASC';
+
+    const tents = await allAsync(db, sql, params);
     return res.status(200).json(tents);
   } catch (err) {
     console.error('Error fetching tents:', err.message);
@@ -20,7 +39,7 @@ router.get('/', async (req, res) => {
 
 /**
  * GET /tents/:id
- * Fetch a single tent by ID.
+ * Fetches a single tent by ID.
  */
 router.get('/:id', async (req, res) => {
   try {
@@ -44,7 +63,7 @@ router.get('/:id', async (req, res) => {
 
 /**
  * POST /tents
- * Create a new tent and automatically log an ADD audit record.
+ * Creates a new tent and automatically logs an ADD audit record.
  */
 router.post('/', async (req, res) => {
   const { tent_name, size, status } = req.body;
@@ -64,7 +83,6 @@ router.post('/', async (req, res) => {
   const db = getDb();
 
   try {
-    // Database transaction to ensure tent insertion and audit logging are atomic
     await runAsync(db, 'BEGIN TRANSACTION');
 
     const insertResult = await runAsync(
@@ -89,9 +107,7 @@ router.post('/', async (req, res) => {
   } catch (err) {
     try {
       await runAsync(db, 'ROLLBACK');
-    } catch (rollbackErr) {
-      console.error('Rollback failed:', rollbackErr.message);
-    }
+    } catch (e) {}
     console.error('Error creating tent and audit log:', err.message);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -99,7 +115,7 @@ router.post('/', async (req, res) => {
 
 /**
  * PUT /tents/:id
- * Update an existing tent and automatically log an UPDATE audit record.
+ * Updates an existing tent and automatically logs an UPDATE audit record.
  */
 router.put('/:id', async (req, res) => {
   const tentId = parseInt(req.params.id, 10);
@@ -123,8 +139,6 @@ router.put('/:id', async (req, res) => {
   const db = getDb();
 
   try {
-    // Check if the tent exists before attempting update
-    // "Do not log updates or deletions of nonexistent tents."
     const existingTent = await getAsync(db, 'SELECT * FROM tents WHERE tent_id = ?', [tentId]);
     if (!existingTent) {
       return res.status(404).json({ error: 'Tent not found' });
@@ -134,7 +148,6 @@ router.put('/:id', async (req, res) => {
       ? status.trim()
       : existingTent.status;
 
-    // Transaction for atomic update and audit logging
     await runAsync(db, 'BEGIN TRANSACTION');
 
     await runAsync(
@@ -157,9 +170,7 @@ router.put('/:id', async (req, res) => {
   } catch (err) {
     try {
       await runAsync(db, 'ROLLBACK');
-    } catch (rollbackErr) {
-      console.error('Rollback failed:', rollbackErr.message);
-    }
+    } catch (e) {}
     console.error('Error updating tent and audit log:', err.message);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -167,7 +178,7 @@ router.put('/:id', async (req, res) => {
 
 /**
  * DELETE /tents/:id
- * Delete an existing tent and automatically log a DELETE audit record.
+ * Deletes an existing tent and automatically logs a DELETE audit record.
  */
 router.delete('/:id', async (req, res) => {
   const tentId = parseInt(req.params.id, 10);
@@ -178,14 +189,11 @@ router.delete('/:id', async (req, res) => {
   const db = getDb();
 
   try {
-    // Check if tent exists
-    // "Do not log updates or deletions of nonexistent tents."
     const existingTent = await getAsync(db, 'SELECT * FROM tents WHERE tent_id = ?', [tentId]);
     if (!existingTent) {
       return res.status(404).json({ error: 'Tent not found' });
     }
 
-    // Transaction for atomic deletion and audit logging
     await runAsync(db, 'BEGIN TRANSACTION');
 
     await runAsync(db, 'DELETE FROM tents WHERE tent_id = ?', [tentId]);
@@ -206,9 +214,7 @@ router.delete('/:id', async (req, res) => {
   } catch (err) {
     try {
       await runAsync(db, 'ROLLBACK');
-    } catch (rollbackErr) {
-      console.error('Rollback failed:', rollbackErr.message);
-    }
+    } catch (e) {}
     console.error('Error deleting tent and audit log:', err.message);
     return res.status(500).json({ error: 'Internal Server Error' });
   }

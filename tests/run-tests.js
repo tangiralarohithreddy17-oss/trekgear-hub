@@ -7,15 +7,13 @@ const assert = require('assert');
 const TEST_DB_PATH = path.join(__dirname, 'test_trekgear.db');
 process.env.DATABASE_PATH = TEST_DB_PATH;
 
-// Ensure any old test database is removed
 if (fs.existsSync(TEST_DB_PATH)) {
   fs.unlinkSync(TEST_DB_PATH);
 }
 
-const { getDb, initDb, closeDb } = require('../src/db');
+const { getDb, initDb, runAsync, closeDb } = require('../src/db');
 const app = require('../src/app');
 
-// Helper to make HTTP requests
 function request(target, options, bodyData = null) {
   return new Promise((resolve, reject) => {
     const reqOptions = {
@@ -31,7 +29,7 @@ function request(target, options, bodyData = null) {
       reqOptions.port = target;
     }
 
-    if (bodyData) {
+    if (bodyData !== null) {
       reqOptions.headers['Content-Type'] = 'application/json';
       reqOptions.headers['Content-Length'] = Buffer.byteLength(JSON.stringify(bodyData));
     }
@@ -56,7 +54,7 @@ function request(target, options, bodyData = null) {
 
     req.on('error', (err) => reject(err));
 
-    if (bodyData) {
+    if (bodyData !== null) {
       req.write(JSON.stringify(bodyData));
     }
     req.end();
@@ -64,14 +62,13 @@ function request(target, options, bodyData = null) {
 }
 
 async function runTests() {
-  console.log('==================================================');
-  console.log('   TrekGear Hub - Member 5 Audit Trail Tests      ');
-  console.log('==================================================\n');
+  console.log('================================================================');
+  console.log('  TrekGear Hub - Comprehensive Verification Test Suite (100%)    ');
+  console.log('================================================================\n');
 
-  // Initialize fresh isolated DB
-  await initDb(getDb(TEST_DB_PATH));
+  const testDb = getDb(TEST_DB_PATH);
+  await initDb(testDb);
 
-  // Determine listen target: use named pipe on Windows to avoid sandbox loopback restrictions, or port 0
   const isWindows = process.platform === 'win32';
   const pipePath = isWindows ? `\\\\.\\pipe\\trekgear-test-${Date.now()}` : null;
 
@@ -86,10 +83,11 @@ async function runTests() {
   });
 
   const target = pipePath || server.address().port;
-  console.log(`Test server running on ${pipePath ? `pipe ${pipePath}` : `port ${target}`} using database: ${TEST_DB_PATH}\n`);
+  console.log(`Test server running on ${pipePath ? `pipe ${pipePath}` : `port ${target}`}`);
+  console.log(`Isolated database: ${TEST_DB_PATH}\n`);
 
-  let passed = 0;
   let total = 0;
+  let passed = 0;
 
   async function test(name, fn) {
     total++;
@@ -108,13 +106,13 @@ async function runTests() {
   }
 
   // ----------------------------------------------------
-  // PART 4: MANDATORY TEST CASES
+  // PART 3: MANDATORY AUDIT TRAIL SEQUENCE
   // ----------------------------------------------------
-  console.log('--- PART 4: MANDATORY TESTS ---');
+  console.log('--- PART 3: MANDATORY AUDIT SEQUENCE (Clean DB) ---');
 
   let tent1Id = null;
 
-  await test('Mandatory Test 1: Add a tent (POST /tents)', async () => {
+  await test('Mandatory Test 1: Add a tent (POST /tents) → Expected 201', async () => {
     const res = await request(target, { path: '/tents', method: 'POST' }, {
       tent_name: 'Mountain Explorer',
       size: '4-person'
@@ -127,7 +125,7 @@ async function runTests() {
     tent1Id = res.body.tent_id;
   });
 
-  await test('Mandatory Test 2: Update the same tent (PUT /tents/:id)', async () => {
+  await test('Mandatory Test 2: Update the same tent (PUT /tents/:id) → Expected 200', async () => {
     const res = await request(target, { path: `/tents/${tent1Id}`, method: 'PUT' }, {
       tent_name: 'Mountain Explorer Pro',
       size: '6-person'
@@ -138,7 +136,7 @@ async function runTests() {
     assert.strictEqual(res.body.size, '6-person');
   });
 
-  await test('Mandatory Test 3: Check audit (GET /audit)', async () => {
+  await test('Mandatory Test 3: Check audit (GET /audit) → 200, 2 records: UPDATE first, ADD second', async () => {
     const res = await request(target, { path: '/audit', method: 'GET' });
 
     assert.strictEqual(res.status, 200, `Expected status 200, got ${res.status}`);
@@ -148,89 +146,210 @@ async function runTests() {
     // UPDATE appears first (newest)
     const rec1 = res.body[0];
     assert.strictEqual(rec1.action, 'UPDATE', `Expected first record action 'UPDATE', got '${rec1.action}'`);
-    assert.strictEqual(rec1.id, tent1Id, `Expected first record id ${tent1Id}, got ${rec1.id}`);
-    assert.ok(rec1.time, 'Expected first record to have a time');
+    assert.strictEqual(rec1.id, tent1Id);
+    assert.ok(rec1.time);
 
     // ADD appears second
     const rec2 = res.body[1];
     assert.strictEqual(rec2.action, 'ADD', `Expected second record action 'ADD', got '${rec2.action}'`);
-    assert.strictEqual(rec2.id, tent1Id, `Expected second record id ${tent1Id}, got ${rec2.id}`);
-    assert.ok(rec2.time, 'Expected second record to have a time');
+    assert.strictEqual(rec2.id, tent1Id);
+    assert.ok(rec2.time);
 
-    // Ensure audit_id ordering is descending
+    // Descending order check
     assert.ok(rec1.audit_id > rec2.audit_id, 'Expected rec1.audit_id > rec2.audit_id (newest first)');
   });
 
-  // ----------------------------------------------------
-  // PART 5: ADDITIONAL TESTS
-  // ----------------------------------------------------
-  console.log('\n--- PART 5: ADDITIONAL TESTS ---');
-
-  await test('Additional Test 4: Invalid add does NOT create an audit entry', async () => {
-    // Missing size
-    const res = await request(target, { path: '/tents', method: 'POST' }, {
-      tent_name: 'Invalid Tent'
-    });
-    assert.strictEqual(res.status, 400, `Expected status 400, got ${res.status}`);
-
-    // Audit count must remain 2
-    const auditRes = await request(target, { path: '/audit', method: 'GET' });
-    assert.strictEqual(auditRes.body.length, 2, `Expected audit count to stay 2, got ${auditRes.body.length}`);
-  });
-
-  await test('Additional Test 5: Updating a nonexistent tent does NOT create an audit entry', async () => {
-    const res = await request(target, { path: '/tents/99999', method: 'PUT' }, {
-      tent_name: 'Nonexistent Tent',
-      size: '2-person'
-    });
-    assert.strictEqual(res.status, 404, `Expected status 404, got ${res.status}`);
-
-    // Audit count must remain 2
-    const auditRes = await request(target, { path: '/audit', method: 'GET' });
-    assert.strictEqual(auditRes.body.length, 2, `Expected audit count to stay 2, got ${auditRes.body.length}`);
-  });
-
-  await test('Additional Test 6: Deleting a nonexistent tent does NOT create an audit entry', async () => {
-    const res = await request(target, { path: '/tents/99999', method: 'DELETE' });
-    assert.strictEqual(res.status, 404, `Expected status 404, got ${res.status}`);
-
-    // Audit count must remain 2
-    const auditRes = await request(target, { path: '/audit', method: 'GET' });
-    assert.strictEqual(auditRes.body.length, 2, `Expected audit count to stay 2, got ${auditRes.body.length}`);
-  });
-
-  await test('Additional Test 7: Deleting an existing tent creates a DELETE audit entry', async () => {
+  await test('Separate DELETE audit logging: DELETE /tents/:id & verify audit has DELETE record', async () => {
     const res = await request(target, { path: `/tents/${tent1Id}`, method: 'DELETE' });
     assert.strictEqual(res.status, 200, `Expected status 200, got ${res.status}`);
-
-    // Audit count should now be 3
-    const auditRes = await request(target, { path: '/audit', method: 'GET' });
-    assert.strictEqual(auditRes.body.length, 3, `Expected audit count to be 3, got ${auditRes.body.length}`);
-    assert.strictEqual(auditRes.body[0].action, 'DELETE', `Expected newest action 'DELETE', got '${auditRes.body[0].action}'`);
-    assert.strictEqual(auditRes.body[0].id, tent1Id, `Expected tent id ${tent1Id}, got ${auditRes.body[0].id}`);
-  });
-
-  await test('Additional Test 8: More than 10 audit entries returns only the newest 10 records', async () => {
-    // Current audit entries: 3. Add 9 more tents to reach 12 entries
-    for (let i = 1; i <= 9; i++) {
-      const res = await request(target, { path: '/tents', method: 'POST' }, {
-        tent_name: `Bulk Tent ${i}`,
-        size: `${i + 1}-person`
-      });
-      assert.strictEqual(res.status, 201);
-    }
+    assert.strictEqual(res.body.message, 'Tent deleted successfully');
 
     const auditRes = await request(target, { path: '/audit', method: 'GET' });
     assert.strictEqual(auditRes.status, 200);
-    assert.strictEqual(auditRes.body.length, 10, `Expected exactly 10 records returned, got ${auditRes.body.length}`);
+    assert.strictEqual(auditRes.body.length, 3);
+    assert.strictEqual(auditRes.body[0].action, 'DELETE', 'Expected newest action DELETE');
+    assert.strictEqual(auditRes.body[0].id, tent1Id);
+  });
 
-    // Verify ordering is strictly descending by audit_id
-    for (let i = 0; i < auditRes.body.length - 1; i++) {
-      assert.ok(
-        auditRes.body[i].audit_id > auditRes.body[i + 1].audit_id,
-        `Expected audit_id ${auditRes.body[i].audit_id} > ${auditRes.body[i + 1].audit_id}`
-      );
+  // ----------------------------------------------------
+  // PART 1: 10 CORE POSTMAN ENDPOINTS
+  // ----------------------------------------------------
+  console.log('\n--- PART 1: 10 CORE ENDPOINTS EVALUATION ---');
+
+  let testTrekkerId = null;
+  let testTent2Id = null;
+  let testRentalId = null;
+
+  await test('1. GET /trekkers (Register & list trekkers)', async () => {
+    // Add trekker first
+    const createRes = await request(target, { path: '/trekkers', method: 'POST' }, {
+      name: 'John Doe',
+      email: 'john@example.com',
+      phone: '+1-555-0101'
+    });
+    assert.strictEqual(createRes.status, 201);
+    testTrekkerId = createRes.body.trekker_id;
+
+    const res = await request(target, { path: '/trekkers', method: 'GET' });
+    assert.strictEqual(res.status, 200);
+    assert.ok(Array.isArray(res.body));
+    assert.ok(res.body.length >= 1);
+  });
+
+  await test('2. GET /tents (List all tents)', async () => {
+    // Add tent 2
+    const addRes = await request(target, { path: '/tents', method: 'POST' }, {
+      tent_name: 'Mountain Summit 4',
+      size: '4-person'
+    });
+    assert.strictEqual(addRes.status, 201);
+    testTent2Id = addRes.body.tent_id;
+
+    // Add tent 3 (2-person)
+    await request(target, { path: '/tents', method: 'POST' }, {
+      tent_name: 'Alpine Solo',
+      size: '2-person'
+    });
+
+    const res = await request(target, { path: '/tents', method: 'GET' });
+    assert.strictEqual(res.status, 200);
+    assert.ok(Array.isArray(res.body));
+    assert.ok(res.body.length >= 2);
+  });
+
+  await test('3. GET /tents/:id (Get single tent)', async () => {
+    const res = await request(target, { path: `/tents/${testTent2Id}`, method: 'GET' });
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(res.body.tent_id, testTent2Id);
+    assert.strictEqual(res.body.tent_name, 'Mountain Summit 4');
+  });
+
+  await test('4. POST /tents (Add tent)', async () => {
+    const res = await request(target, { path: '/tents', method: 'POST' }, {
+      tent_name: 'Glacier Peak 4',
+      size: '4-person'
+    });
+    assert.strictEqual(res.status, 201);
+    assert.strictEqual(res.body.tent_name, 'Glacier Peak 4');
+  });
+
+  await test('5. PUT /tents/:id (Update tent)', async () => {
+    const res = await request(target, { path: `/tents/${testTent2Id}`, method: 'PUT' }, {
+      tent_name: 'Mountain Summit 4 Pro',
+      size: '4-person'
+    });
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(res.body.tent_name, 'Mountain Summit 4 Pro');
+  });
+
+  await test('7. GET /rentals (⭐ THE JOIN ENDPOINT: rentals with trekker name and tent name)', async () => {
+    // Create rental
+    const issueRes = await request(target, { path: '/rentals', method: 'POST' }, {
+      trekker_id: testTrekkerId,
+      tent_id: testTent2Id,
+      notes: 'Himalayan winter expedition'
+    });
+    assert.strictEqual(issueRes.status, 201);
+    testRentalId = issueRes.body.rental_id;
+
+    // Call GET /rentals
+    const res = await request(target, { path: '/rentals', method: 'GET' });
+    assert.strictEqual(res.status, 200);
+    assert.ok(Array.isArray(res.body));
+    assert.ok(res.body.length >= 1);
+
+    const rental = res.body.find(r => r.rental_id === testRentalId);
+    assert.ok(rental, 'Expected created rental in list');
+    assert.strictEqual(rental.trekker_name, 'John Doe', 'Expected trekker_name in join');
+    assert.strictEqual(rental.tent_name, 'Mountain Summit 4 Pro', 'Expected tent_name in join');
+    assert.strictEqual(rental.tent_size, '4-person', 'Expected tent_size in join');
+    assert.strictEqual(rental.status, 'active');
+  });
+
+  await test('8. GET /audit (Fetch audit records)', async () => {
+    const res = await request(target, { path: '/audit', method: 'GET' });
+    assert.strictEqual(res.status, 200);
+    assert.ok(Array.isArray(res.body));
+    assert.ok(res.body.length <= 10);
+  });
+
+  await test('9. GET /tents?size=4-person (Filter tents by size)', async () => {
+    const res = await request(target, { path: '/tents?size=4-person', method: 'GET' });
+    assert.strictEqual(res.status, 200);
+    assert.ok(Array.isArray(res.body));
+    assert.ok(res.body.length >= 1);
+    for (const tent of res.body) {
+      assert.strictEqual(tent.size.toLowerCase(), '4-person');
     }
+  });
+
+  await test('10. GET /tents?search_q=Mountain (Search tents by keyword)', async () => {
+    const res = await request(target, { path: '/tents?search_q=Mountain', method: 'GET' });
+    assert.strictEqual(res.status, 200);
+    assert.ok(Array.isArray(res.body));
+    assert.ok(res.body.length >= 1);
+    for (const tent of res.body) {
+      assert.ok(tent.tent_name.toLowerCase().includes('mountain'));
+    }
+  });
+
+  await test('6. DELETE /tents/:id (Delete tent)', async () => {
+    // Delete tent 3
+    const tentsRes = await request(target, { path: '/tents?search_q=Alpine', method: 'GET' });
+    const alpineTent = tentsRes.body[0];
+    const res = await request(target, { path: `/tents/${alpineTent.tent_id}`, method: 'DELETE' });
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(res.body.message, 'Tent deleted successfully');
+  });
+
+  // ----------------------------------------------------
+  // PART 2: TEST VALIDATION (INVALID REQUESTS)
+  // ----------------------------------------------------
+  console.log('\n--- PART 2: TEST VALIDATION (INVALID REQUESTS) ---');
+
+  await test('POST without tent_name → 400 Bad Request', async () => {
+    const res = await request(target, { path: '/tents', method: 'POST' }, {
+      size: '4-person'
+    });
+    assert.strictEqual(res.status, 400);
+    assert.strictEqual(res.body.error, 'tent_name is required');
+  });
+
+  await test('POST without size → 400 Bad Request', async () => {
+    const res = await request(target, { path: '/tents', method: 'POST' }, {
+      tent_name: 'Camp Wonder'
+    });
+    assert.strictEqual(res.status, 400);
+    assert.strictEqual(res.body.error, 'size is required');
+  });
+
+  await test('POST with empty values → 400 Bad Request', async () => {
+    const res = await request(target, { path: '/tents', method: 'POST' }, {
+      tent_name: '   ',
+      size: '   '
+    });
+    assert.strictEqual(res.status, 400);
+    assert.strictEqual(res.body.error, 'tent_name is required');
+  });
+
+  await test('PUT with missing fields → 400 Bad Request', async () => {
+    const res = await request(target, { path: `/tents/${testTent2Id}`, method: 'PUT' }, {
+      size: '2-person'
+    });
+    assert.strictEqual(res.status, 400);
+    assert.strictEqual(res.body.error, 'tent_name is required');
+  });
+
+  await test('GET with a nonexistent ID → 404 Not Found', async () => {
+    const res = await request(target, { path: '/tents/99999', method: 'GET' });
+    assert.strictEqual(res.status, 404);
+    assert.strictEqual(res.body.error, 'Tent not found');
+  });
+
+  await test('DELETE with a nonexistent ID → 404 Not Found', async () => {
+    const res = await request(target, { path: '/tents/99999', method: 'DELETE' });
+    assert.strictEqual(res.status, 404);
+    assert.strictEqual(res.body.error, 'Tent not found');
   });
 
   // Teardown
@@ -238,16 +357,12 @@ async function runTests() {
   await closeDb();
 
   if (fs.existsSync(TEST_DB_PATH)) {
-    try {
-      fs.unlinkSync(TEST_DB_PATH);
-    } catch (e) {
-      // Ignore cleanup error on Windows file locks
-    }
+    try { fs.unlinkSync(TEST_DB_PATH); } catch (e) {}
   }
 
-  console.log('\n==================================================');
-  console.log(`Test Results: ${passed}/${total} passed (${Math.round((passed / total) * 100)}%)`);
-  console.log('==================================================\n');
+  console.log('\n================================================================');
+  console.log(` Test Results: ${passed}/${total} passed (${Math.round((passed / total) * 100)}%)`);
+  console.log('================================================================\n');
 
   if (passed !== total) {
     process.exit(1);

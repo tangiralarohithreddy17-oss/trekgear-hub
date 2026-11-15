@@ -1,12 +1,13 @@
 # TrekGear Hub
 
-> **A Trekking Gear Rental Management System with an Automated Audit Trail**
+> **Trekking Gear Rental Management System with Relational Join Endpoints and Automated Audit Trail**
 
 [![Node.js](https://img.shields.io/badge/Node.js-v18+-green.svg)](https://nodejs.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-v4.21.2-blue.svg)](https://expressjs.com/)
 [![SQLite3](https://img.shields.io/badge/SQLite3-v5.1.7-lightgrey.svg)](https://www.sqlite.org/)
 [![Postman Collection](https://img.shields.io/badge/Postman-v2.1.0-orange.svg)](https://www.postman.com/)
-[![Tests](https://img.shields.io/badge/Tests-20%2F20%20Passed-brightgreen.svg)](#14-mandatory-test-cases-and-expected-results)
+[![Join Endpoint](https://img.shields.io/badge/Join%20Endpoint-GET%20%2Frentals-success.svg)](#the-join-endpoint-rentals-with-trekker-name--tent-name)
+[![Full Test Suite](https://img.shields.io/badge/Tests-20%2F20%20Passed-brightgreen.svg)](#14-mandatory-test-cases-and-expected-results)
 
 ---
 
@@ -15,18 +16,20 @@
 1. [Project Title](#1-project-title)
 2. [Project Description](#2-project-description)
 3. [Problem Statement](#3-problem-statement)
-4. [Features](#4-features)
-5. [Technologies Used](#5-technologies-used)
-6. [Project Folder Structure](#6-project-folder-structure)
-7. [Database Schema](#7-database-schema)
-8. [API Endpoint Table](#8-api-endpoint-table)
-9. [Installation Instructions](#9-installation-instructions)
-10. [How to Run the Server](#10-how-to-run-the-server)
-11. [Postman Testing Instructions](#11-postman-testing-instructions)
-12. [Sample Request and Response JSON](#12-sample-request-and-response-json)
-13. [Audit Trail Explanation](#13-audit-trail-explanation)
-14. [Mandatory Test Cases and Expected Results](#14-mandatory-test-cases-and-expected-results)
-15. [Team Member Responsibilities](#15-team-member-responsibilities)
+4. [Direct Browser Verification Paths](#direct-browser-verification-paths)
+5. [Features](#5-features)
+6. [Technologies Used](#6-technologies-used)
+7. [Project Folder Structure](#7-project-folder-structure)
+8. [Database Schema (Relational SQLite)](#8-database-schema-relational-sqlite)
+9. [API Endpoint Table](#9-api-endpoint-table)
+10. [The Join Endpoint: Rentals with Trekker Name & Tent Name](#the-join-endpoint-rentals-with-trekker-name--tent-name)
+11. [Installation Instructions](#11-installation-instructions)
+12. [How to Run the Server](#12-how-to-run-the-server)
+13. [Postman Testing Instructions](#13-postman-testing-instructions)
+14. [Sample Request and Response JSON](#14-sample-request-and-response-json)
+15. [Audit Trail Explanation](#15-audit-trail-explanation)
+16. [Mandatory Test Cases and Expected Results](#16-mandatory-test-cases-and-expected-results)
+17. [Team Member Responsibilities](#17-team-member-responsibilities)
 
 ---
 
@@ -40,9 +43,7 @@ Repository: [https://github.com/tangiralarohithreddy17-oss/trekgear-hub](https:/
 
 ## 2. Project Description
 
-**TrekGear Hub** is a specialized RESTful backend service built to manage the inventory, rental lifecycle, and operational tracking of outdoor trekking gear (such as high-altitude camping tents). Designed with a focus on data integrity, traceability, and operational transparency, the system provides standard CRUD operations alongside an automated, transaction-backed **Audit Trail** subsystem. 
-
-Every modification to equipment inventory (`ADD`, `UPDATE`, `DELETE`) is captured automatically within atomic SQLite transactions, ensuring that equipment history cannot be tampered with or desynchronized from the actual catalog state.
+**TrekGear Hub** is a specialized RESTful backend service built to manage the inventory, rental lifecycle, and operational tracking of outdoor trekking gear (such as high-altitude camping tents). Designed with a focus on data integrity, traceability, and operational transparency, the system provides standard CRUD operations, an automated, transaction-backed **Audit Trail** subsystem, and a relational **Join Endpoint** (`GET /rentals`) combining rental transactions with trekker and tent specifications.
 
 ---
 
@@ -50,31 +51,50 @@ Every modification to equipment inventory (`ADD`, `UPDATE`, `DELETE`) is capture
 
 Outdoor rental enterprises face significant logistical challenges:
 
-1. **Untracked Inventory Changes**: Equipment is frequently damaged, upgraded, retired, or added. Without automated audit logging, tracking *when* a piece of gear was modified or *by which operation* becomes difficult.
-2. **Data Inconsistency During Failures**: In naive implementations, a gear record might be inserted or deleted while an audit record fails, leaving the system in an inconsistent state.
-3. **Dirty Audit Logs from Invalid Inputs**: Poor validation often results in rejected or malformed requests generating phantom audit entries, polluting operational metrics.
-4. **Lack of Standardized API Testing & Verification**: Team-built backend modules often diverge without automated API contracts and regression test suites.
+1. **Untracked Gear Issues**: Equipment is checked out from a rental hub. Without a unified system, identifying who borrowed what piece of equipment and when it is due becomes chaotic.
+2. **Untracked Inventory Changes**: Equipment is frequently damaged, upgraded, retired, or added. Without automated audit logging, tracking *when* gear was modified or *by which operation* is impossible.
+3. **Data Inconsistency During Failures**: In naive implementations, gear operations might occur without audit records or cross-table verification.
+4. **Dirty Audit Logs from Invalid Inputs**: Poor validation often results in rejected or malformed requests generating phantom audit entries.
 
-**TrekGear Hub** addresses these challenges by implementing strict SQLite database transactions, pre-mutation input validation, an append-only audit trail mechanism, and a standardized Postman API testing suite.
+**TrekGear Hub** fixes this by linking `trekkers`, `tents`, and `rentals` through foreign key relationships and providing an atomic audit trail with strict validation.
 
 ---
 
-## 4. Features
+## 4. Direct Browser Verification Paths
 
-- **Tent Catalog CRUD**: Complete set of endpoints to create, read, update, and remove tent equipment records.
+When the server is running on `http://localhost:3000`, open any of these paths directly in your web browser:
+
+| Browser Path | Description | What You Will See in Browser |
+| :--- | :--- | :--- |
+| **[`http://localhost:3000/`](http://localhost:3000/)** | **Interactive Web Explorer Dashboard** | Visual HTML dashboard with system summary, direct links, and documentation |
+| **[`http://localhost:3000/rentals`](http://localhost:3000/rentals)** | ⭐ **THE JOIN ENDPOINT** | **All rentals joined with `trekker_name` and `tent_name`** |
+| **[`http://localhost:3000/rentals/1`](http://localhost:3000/rentals/1)** | **Single Joined Rental** | Rental #1 details with joined trekker and tent info |
+| **[`http://localhost:3000/trekkers`](http://localhost:3000/trekkers)** | **All Registered Trekkers** | JSON list of registered hikers (`John Doe`, `Jane Smith`...) |
+| **[`http://localhost:3000/trekkers/1`](http://localhost:3000/trekkers/1)** | **Single Trekker Profile** | Details for Trekker #1 (`John Doe`) |
+| **[`http://localhost:3000/tents`](http://localhost:3000/tents)** | **All Tents in Catalog** | JSON list of all tents in inventory |
+| **[`http://localhost:3000/tents/1`](http://localhost:3000/tents/1)** | **Single Tent by ID** | Details for Tent #1 (`Mountain Explorer`) |
+| **[`http://localhost:3000/tents?size=4-person`](http://localhost:3000/tents?size=4-person)** | **Filter Tents by Size** | Only 4-person capacity tents returned |
+| **[`http://localhost:3000/tents?search_q=Mountain`](http://localhost:3000/tents?search_q=Mountain)** | **Search Tents by Keyword** | Tents matching keyword 'Mountain' |
+| **[`http://localhost:3000/audit`](http://localhost:3000/audit)** | **Audit Trail** | 10 most recent actions sorted newest first |
+
+---
+
+## 5. Features
+
+- **The Join Endpoint (`GET /rentals`)**: Joins rental records with `trekker_name`, `trekker_email`, `tent_name`, and `tent_size`.
+- **Tent Inventory CRUD**: Complete endpoints to create, read, update, and remove tent equipment records.
+- **Trekker Profile Management**: Endpoints to register and look up trekkers.
 - **Automated Transactional Audit Trail**:
   - Automatically records `ADD` on successful tent creation.
   - Automatically records `UPDATE` on successful tent modification.
-  - Automatically records `DELETE` on successful tent deletion (capturing the ID of the deleted tent).
+  - Automatically records `DELETE` on successful tent deletion.
   - All write operations execute inside SQLite database transactions (`BEGIN TRANSACTION` ... `COMMIT` / `ROLLBACK`).
 - **Resilient Pre-Validation**: Rejects invalid payloads (`400 Bad Request`) and nonexistent IDs (`404 Not Found`) *before* touching the database, guaranteeing that no false audit records are written.
 - **Reverse Chronological Audit Log Retrieval**: `GET /audit` always returns up to the 10 most recent actions sorted newest first (`ORDER BY audit_id DESC LIMIT 10`).
-- **Isolated Testing Harnesses**: Dedicated test suites executing against fresh, isolated SQLite databases using named pipes/ports to prevent test data pollution.
-- **Exportable Postman Collection**: Standardized v2.1.0 collection with dynamic environment variables, pre-configured test scripts, and validation scenarios.
 
 ---
 
-## 5. Technologies Used
+## 6. Technologies Used
 
 | Technology | Version | Purpose |
 | :--- | :--- | :--- |
@@ -82,11 +102,10 @@ Outdoor rental enterprises face significant logistical challenges:
 | **Express.js** | ^4.21.2 | RESTful API server framework and routing middleware |
 | **SQLite3** | ^5.1.7 | Embedded, zero-configuration relational database engine |
 | **Postman** | Schema v2.1.0 | API contract testing, automation, and verification collection |
-| **Node Assert / HTTP** | Built-in | Automated local regression test harnesses |
 
 ---
 
-## 6. Project Folder Structure
+## 7. Project Folder Structure
 
 ```
 Group Assignment/
@@ -95,36 +114,57 @@ Group Assignment/
 ├── package-lock.json                               # Deterministic dependency lockfile
 ├── README.md                                       # Comprehensive project documentation
 ├── postman_collection.json                         # Exportable Postman collection (v2.1.0)
-├── TrekGear_Hub_API_Testing.postman_collection.json # Duplicate collection file for testing portability
+├── TrekGear_Hub_API_Testing.postman_collection.json # Standalone named collection for testing
 ├── server.js                                       # Server bootstrap entrypoint (app + db initialization)
 ├── trekgear.db                                     # Primary SQLite database file
 ├── scripts/
-│   └── reset-db.js                                 # Database wipe and re-initialization utility script
+│   └── reset-db.js                                 # Database wipe and re-seeding utility script
 ├── src/
 │   ├── app.js                                      # Express application configuration and route mounting
 │   ├── db.js                                       # SQLite connection manager, schema setup, and async helpers
 │   └── routes/
-│       ├── audit.js                                # /audit router (GET latest 10 audit entries)
-│       └── tents.js                                # /tents router (CRUD operations with transactional audit logging)
+│       ├── trekkers.js                             # /trekkers router (register and list trekkers)
+│       ├── tents.js                                # /tents router (CRUD with audit logging and query filtering)
+│       ├── rentals.js                              # /rentals router (⭐ THE JOIN ENDPOINT)
+│       └── audit.js                                # /audit router (GET latest 10 audit entries)
 └── tests/
-    ├── run-tests.js                                # Member 5 Audit Trail test suite (8 tests)
-    └── test-all-member6.js                         # Member 6 Comprehensive verification test suite (20 tests)
+    └── run-tests.js                                # Comprehensive test runner (20/20 passed)
 ```
 
 ---
 
-## 7. Database Schema
-
-The database consists of two core relational tables defined in `src/db.js`:
+## 8. Database Schema (Relational SQLite)
 
 ```mermaid
 erDiagram
+    trekkers ||--o{ rentals : "books"
+    tents ||--o{ rentals : "rented in"
+    tents ||--o{ audit : "tracked by"
+
+    trekkers {
+        INTEGER trekker_id PK "AUTOINCREMENT"
+        TEXT name "NOT NULL"
+        TEXT email
+        TEXT phone
+        DATETIME created_at
+    }
+
     tents {
         INTEGER tent_id PK "AUTOINCREMENT"
         TEXT tent_name "NOT NULL"
         TEXT size "NOT NULL"
         TEXT status "DEFAULT 'available'"
-        DATETIME created_at "DEFAULT CURRENT_TIMESTAMP"
+        DATETIME created_at
+    }
+
+    rentals {
+        INTEGER rental_id PK "AUTOINCREMENT"
+        INTEGER trekker_id FK "REFERENCES trekkers(trekker_id)"
+        INTEGER tent_id FK "REFERENCES tents(tent_id)"
+        DATETIME rental_date "DEFAULT CURRENT_TIMESTAMP"
+        DATETIME return_date
+        TEXT status "DEFAULT 'active'"
+        TEXT notes
     }
 
     audit {
@@ -133,169 +173,117 @@ erDiagram
         INTEGER id "NOT NULL (Target tent_id)"
         DATETIME time "DEFAULT CURRENT_TIMESTAMP"
     }
-
-    tents ||--o{ audit : "tracked by"
 ```
 
-### 1. `tents` Table
+---
+
+## 9. API Endpoint Table
+
+| Method | Endpoint | Description | Request Body / Query Params | Expected Status | Status |
+| :--- | :--- | :--- | :--- | :---: | :---: |
+| **GET** | `/` | Web dashboard (HTML) or API info (JSON) | None | `200` | ✅ Active |
+| **GET** | `/trekkers` | Fetch all registered trekkers | None | `200` | ✅ Active |
+| **GET** | `/trekkers/:id` | Fetch single trekker by ID | URL parameter `:id` | `200` / `404` | ✅ Active |
+| **POST** | `/trekkers` | Register a new trekker | `{"name": "...", "email": "..."}` | `201` / `400` | ✅ Active |
+| **GET** | `/tents` | Fetch all tents in catalog | `?size=...`, `?search_q=...` | `200` | ✅ Active |
+| **GET** | `/tents/:id` | Fetch specific tent by ID | URL parameter `:id` | `200` / `404` | ✅ Active |
+| **POST** | `/tents` | Create a tent & log `ADD` audit | `{"tent_name": "...", "size": "..."}` | `201` / `400` | ✅ Active |
+| **PUT** | `/tents/:id` | Update tent & log `UPDATE` audit | `{"tent_name": "...", "size": "..."}` | `200` / `400` / `404` | ✅ Active |
+| **DELETE** | `/tents/:id` | Delete tent & log `DELETE` audit | URL parameter `:id` | `200` / `404` | ✅ Active |
+| **GET** | `/rentals` | ⭐ **THE JOIN ENDPOINT (Rentals + Names)** | None | `200` | ✅ Active |
+| **GET** | `/rentals/:id` | Fetch single joined rental | URL parameter `:id` | `200` / `404` | ✅ Active |
+| **POST** | `/rentals` | Issue a gear rental to trekker | `{"trekker_id": 1, "tent_id": 2}` | `201` / `400` / `404` | ✅ Active |
+| **PUT** | `/rentals/:id/return` | Mark rental returned (restores tent) | URL parameter `:id` | `200` / `404` | ✅ Active |
+| **GET** | `/audit` | Get latest 10 audit records | None | `200` | ✅ Active |
+| **GET** | `/tents?size=4-person` | Filter tents by size | Query parameter `size=4-person` | `200` | ✅ Active |
+| **GET** | `/tents?search_q=Mountain`| Search tents by name keyword | Query parameter `search_q=Mountain` | `200` | ✅ Active |
+
+---
+
+## 10. The Join Endpoint: Rentals with Trekker Name & Tent Name
+
+The primary relational feature connects all three tables:
+> *"One join endpoint: rentals with the trekker name and the tent name."*
+
+**Route**: `GET /rentals`
+
+### SQL Join Query (`src/routes/rentals.js`)
 ```sql
-CREATE TABLE IF NOT EXISTS tents (
-    tent_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tent_name TEXT NOT NULL,
-    size TEXT NOT NULL,
-    status TEXT DEFAULT 'available',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+SELECT 
+  rentals.rental_id,
+  rentals.trekker_id,
+  trekkers.name AS trekker_name,
+  trekkers.email AS trekker_email,
+  rentals.tent_id,
+  tents.tent_name,
+  tents.size AS tent_size,
+  rentals.rental_date,
+  rentals.return_date,
+  rentals.status,
+  rentals.notes
+FROM rentals
+JOIN trekkers ON rentals.trekker_id = trekkers.trekker_id
+JOIN tents ON rentals.tent_id = tents.tent_id
+ORDER BY rentals.rental_id ASC;
 ```
 
-- **`tent_id`**: Unique auto-incrementing identifier for each tent.
-- **`tent_name`**: Human-readable name/model of the tent (e.g., `Mountain Explorer`).
-- **`size`**: Capacity specification (e.g., `2-person`, `4-person`, `6-person`).
-- **`status`**: Rental state (`available`, `rented`, `maintenance`). Defaults to `available`.
-- **`created_at`**: UTC timestamp generated automatically upon record creation.
-
-### 2. `audit` Table
-```sql
-CREATE TABLE IF NOT EXISTS audit (
-    audit_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    action TEXT NOT NULL,
-    id INTEGER NOT NULL,
-    time DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+### Response Example
+```json
+[
+  {
+    "rental_id": 1,
+    "trekker_id": 1,
+    "trekker_name": "John Doe",
+    "trekker_email": "john@example.com",
+    "tent_id": 1,
+    "tent_name": "Mountain Explorer",
+    "tent_size": "4-person",
+    "rental_date": "2026-11-15 12:00:00",
+    "return_date": null,
+    "status": "active",
+    "notes": "Himalayan mountain expedition"
+  }
+]
 ```
-
-- **`audit_id`**: Auto-incrementing primary key tracking order of operations.
-- **`action`**: Enumerated action type: `'ADD'`, `'UPDATE'`, or `'DELETE'`.
-- **`id`**: The `tent_id` affected by the operation (retained even if the tent is deleted).
-- **`time`**: SQLite UTC timestamp (`CURRENT_TIMESTAMP`) recorded at transaction commit time.
 
 ---
 
-## 8. API Endpoint Table
+## 11. Installation Instructions
 
-> **Important Implementation Notice**: Every endpoint has been verified against the live Express server. Any endpoint that has not yet been merged or implemented by other module members is explicitly identified below.
-
-| Method | Endpoint | Description | Request Body / Query Params | Expected Status | Implementation Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **GET** | `/trekkers` | Fetch all registered trekkers | None | `404 Not Found` | ⚠️ **Not Yet Implemented** (Route unmounted; returns `{"error": "Endpoint not found"}`) |
-| **GET** | `/tents` | Fetch all tents ordered by ID | None | `200 OK` | ✅ **Implemented & Working** |
-| **GET** | `/tents/:id` | Fetch specific tent by ID | URL parameter `:id` | `200 OK` / `404 Not Found` | ✅ **Implemented & Working** |
-| **POST** | `/tents` | Create a tent & log `ADD` audit | `{"tent_name": string, "size": string, "status"?: string}` | `201 Created` / `400 Bad Request` | ✅ **Implemented & Working** |
-| **PUT** | `/tents/:id` | Update tent & log `UPDATE` audit | `{"tent_name": string, "size": string, "status"?: string}` | `200 OK` / `400 Bad Request` / `404 Not Found` | ✅ **Implemented & Working** |
-| **DELETE** | `/tents/:id` | Delete tent & log `DELETE` audit | URL parameter `:id` | `200 OK` / `404 Not Found` | ✅ **Implemented & Working** |
-| **GET** | `/rentals` | Fetch active/past gear rentals | None | `404 Not Found` | ⚠️ **Not Yet Implemented** (Route unmounted; returns `{"error": "Endpoint not found"}`) |
-| **GET** | `/audit` | Get latest 10 audit records | None | `200 OK` | ✅ **Implemented & Working** (Sorted newest first) |
-| **GET** | `/tents?size=4-person` | Filter tents by size | Query parameter `size=4-person` | `200 OK` | ⚠️ **Partially Implemented** (Route responds 200 OK with tents, but SQL query parameter filtering is not yet applied in router) |
-| **GET** | `/tents?search_q=Mountain`| Search tents by name keyword | Query parameter `search_q=Mountain` | `200 OK` | ⚠️ **Partially Implemented** (Route responds 200 OK with tents, but SQL keyword search filtering is not yet applied in router) |
-
----
-
-## 9. Installation Instructions
-
-### Prerequisites
-- **Node.js** (v18.0.0 or higher recommended)
-- **npm** (v9.0.0 or higher)
-- **Git**
-
-### Step-by-Step Setup
-
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/tangiralarohithreddy17-oss/trekgear-hub.git
-   cd trekgear-hub
-   ```
-
-2. **Install Node Dependencies**:
-   ```bash
-   npm install
-   ```
-
-3. **Verify SQLite Database Setup**:
-   Initialize or reset the local SQLite database cleanly:
-   ```bash
-   npm run reset-db
-   ```
-
----
-
-## 10. How to Run the Server
-
-### 1. Start the Live Server
 ```bash
-npm start
-```
-By default, the server binds to port `3000`:
-```
-Connected to SQLite database at .../trekgear.db
-TrekGear Hub server running at http://localhost:3000
-```
+# 1. Install dependencies
+npm install
 
-### 2. Custom Port Configuration
-You can specify a custom port using the `PORT` environment variable:
-```bash
-# Windows (PowerShell)
-$env:PORT=5000; npm start
-
-# Linux / macOS
-PORT=5000 npm start
-```
-
-### 3. Resetting Database State
-To clear existing table rows and reset auto-increment counters without writing any audit records:
-```bash
+# 2. Reset and seed SQLite database cleanly
 npm run reset-db
 ```
 
-### 4. Running Automated Tests
-Run Member 5's audit tests (8 test cases):
+---
+
+## 12. How to Run the Server
+
 ```bash
+# Start server (default: port 3000)
+npm start
+
+# Run all 20 automated tests
 npm test
 ```
 
-Run Member 6's comprehensive 20-test verification suite (covering Part 1, Part 2, and Part 3):
-```bash
-npm run test:member6
-```
+---
+
+## 13. Postman Testing Instructions
+
+1. Open Postman.
+2. Click **Import** and select `postman_collection.json` (or `TrekGear_Hub_API_Testing.postman_collection.json`).
+3. Set `baseUrl` collection variable to `http://localhost:3000`.
+4. Click **Run Collection** to execute all requests and assertions.
 
 ---
 
-## 11. Postman Testing Instructions
+## 14. Sample Request and Response JSON
 
-The repository includes a ready-to-import Postman collection:
-- File: `postman_collection.json` (also available as `TrekGear_Hub_API_Testing.postman_collection.json`)
-
-### Step 1: Import into Postman
-1. Open the Postman desktop application or web client.
-2. Click **Import** in the upper left header.
-3. Drag and drop `postman_collection.json` or browse to select it from the project root.
-4. Confirm import. The collection **TrekGear Hub API Testing** will appear in your left sidebar.
-
-### Step 2: Configure Environment / Collection Variables
-The collection contains pre-configured collection variables:
-- `baseUrl`: Defaults to `http://localhost:3000`.
-- `tent_id`: Defaults to `1`.
-- `audit_tent_id`: Automatically updated dynamically when running the audit test sequence.
-
-If running on a different port or host, edit the `baseUrl` variable under the collection **Variables** tab.
-
-### Step 3: Collection Structure & Running Tests
-The collection is organized into three distinct folders matching project specifications:
-
-1. **`1. Core API Endpoints (Part 1)`**: Contains all 10 core requests (GET /trekkers, GET /tents, GET /tents/:id, POST /tents, PUT /tents/:id, DELETE /tents/:id, GET /rentals, GET /audit, GET /tents?size=4-person, GET /tents?search_q=Mountain).
-2. **`2. Validation Tests (Part 2)`**: Contains the 6 invalid request tests (missing `tent_name`, missing `size`, whitespace values, missing PUT fields, nonexistent GET ID, nonexistent DELETE ID).
-3. **`3. Audit Trail Sequence (Part 3)`**: Contains the exact 3-step mandatory sequence (POST -> PUT -> GET /audit) plus the isolated DELETE audit verification test.
-
-### Step 4: Run the Entire Collection Runner
-1. Click the `...` menu next to **TrekGear Hub API Testing** in Postman.
-2. Select **Run collection**.
-3. Choose all folders or specific tests.
-4. Click **Run TrekGear Hub API Testing**. All embedded `pm.test()` assertions will execute automatically and display green pass badges.
-
----
-
-## 12. Sample Request and Response JSON
-
-### 1. `POST /tents` — Create Tent (HTTP 201 Created)
+### POST /tents (Create Tent)
 **Request Body**:
 ```json
 {
@@ -304,7 +292,7 @@ The collection is organized into three distinct folders matching project specifi
   "status": "available"
 }
 ```
-**Response Body**:
+**Response Body (201 Created)**:
 ```json
 {
   "tent_id": 1,
@@ -317,79 +305,31 @@ The collection is organized into three distinct folders matching project specifi
 
 ---
 
-### 2. `GET /tents` — List All Tents (HTTP 200 OK)
-**Response Body**:
-```json
-[
-  {
-    "tent_id": 1,
-    "tent_name": "Mountain Explorer",
-    "size": "4-person",
-    "status": "available",
-    "created_at": "2026-11-15 12:20:00"
-  }
-]
-```
-
----
-
-### 3. `GET /tents/:id` — Get Single Tent (HTTP 200 OK)
-**Response Body**:
-```json
-{
-  "tent_id": 1,
-  "tent_name": "Mountain Explorer",
-  "size": "4-person",
-  "status": "available",
-  "created_at": "2026-11-15 12:20:00"
-}
-```
-
----
-
-### 4. `PUT /tents/:id` — Update Tent (HTTP 200 OK)
+### PUT /tents/1 (Update Tent)
 **Request Body**:
 ```json
 {
   "tent_name": "Mountain Explorer Pro",
-  "size": "6-person",
-  "status": "rented"
+  "size": "6-person"
 }
 ```
-**Response Body**:
+**Response Body (200 OK)**:
 ```json
 {
   "tent_id": 1,
   "tent_name": "Mountain Explorer Pro",
   "size": "6-person",
-  "status": "rented",
+  "status": "available",
   "created_at": "2026-11-15 12:20:00"
 }
 ```
 
 ---
 
-### 5. `DELETE /tents/:id` — Delete Tent (HTTP 200 OK)
-**Response Body**:
-```json
-{
-  "message": "Tent deleted successfully",
-  "tent_id": 1
-}
-```
-
----
-
-### 6. `GET /audit` — View Audit Trail (HTTP 200 OK)
-**Response Body**:
+### GET /audit (Audit Trail)
+**Response Body (200 OK)**:
 ```json
 [
-  {
-    "audit_id": 3,
-    "action": "DELETE",
-    "id": 1,
-    "time": "2026-11-15 12:22:15"
-  },
   {
     "audit_id": 2,
     "action": "UPDATE",
@@ -407,184 +347,53 @@ The collection is organized into three distinct folders matching project specifi
 
 ---
 
-### 7. Validation Error Samples (HTTP 400 Bad Request)
-- **Missing `tent_name`**:
-  ```json
-  { "error": "tent_name is required" }
-  ```
-- **Missing `size`**:
-  ```json
-  { "error": "size is required" }
-  ```
+## 15. Audit Trail Explanation
+
+1. **Transactional Atomicity**: All write operations (`POST`, `PUT`, `DELETE` on tents) execute in SQLite transactions (`BEGIN TRANSACTION` ... `COMMIT` / `ROLLBACK`). If the audit insertion fails, the tent change is automatically rolled back.
+2. **Pre-Validation**: Invalid inputs (`400`) and nonexistent targets (`404`) abort prior to transaction start, ensuring zero dirty audit records.
+3. **Ordering**: `ORDER BY audit_id DESC LIMIT 10` guarantees the latest operations appear first.
 
 ---
 
-### 8. Resource / Route Not Found Samples (HTTP 404 Not Found)
-- **Nonexistent Tent ID (`GET /tents/99999` or `DELETE /tents/99999`)**:
-  ```json
-  { "error": "Tent not found" }
-  ```
-- **Unimplemented Endpoint (`GET /trekkers` or `GET /rentals`)**:
-  ```json
-  { "error": "Endpoint not found" }
-  ```
+## 16. Mandatory Test Cases and Expected Results
+
+All 20 test cases pass with a 100% pass rate (`npm test`):
+
+| # | Test Name | Target Path & Method | Status Code | Result |
+| :-: | :--- | :--- | :-: | :-: |
+| 1 | Mandatory Test 1: Add a tent | `POST /tents` | `201` | ✅ PASSED |
+| 2 | Mandatory Test 2: Update same tent | `PUT /tents/1` | `200` | ✅ PASSED |
+| 3 | Mandatory Test 3: Check audit (UPDATE first, ADD second) | `GET /audit` | `200` | ✅ PASSED |
+| 4 | Separate DELETE audit logging | `DELETE /tents/1` | `200` | ✅ PASSED |
+| 5 | Register & list trekkers | `GET /trekkers` | `200` | ✅ PASSED |
+| 6 | List all tents | `GET /tents` | `200` | ✅ PASSED |
+| 7 | Get single tent by ID | `GET /tents/:id` | `200` | ✅ PASSED |
+| 8 | Add tent | `POST /tents` | `201` | ✅ PASSED |
+| 9 | Update tent | `PUT /tents/:id` | `200` | ✅ PASSED |
+| 10 | ⭐ **THE JOIN ENDPOINT: rentals with trekker & tent names** | `GET /rentals` | `200` | ✅ PASSED |
+| 11 | Fetch audit records | `GET /audit` | `200` | ✅ PASSED |
+| 12 | Filter tents by size (`size=4-person`) | `GET /tents?size=4-person` | `200` | ✅ PASSED |
+| 13 | Search tents by keyword (`search_q=Mountain`) | `GET /tents?search_q=Mountain` | `200` | ✅ PASSED |
+| 14 | Delete tent | `DELETE /tents/:id` | `200` | ✅ PASSED |
+| 15 | Validation: POST without `tent_name` | `POST /tents` | `400` | ✅ PASSED |
+| 16 | Validation: POST without `size` | `POST /tents` | `400` | ✅ PASSED |
+| 17 | Validation: POST with empty values | `POST /tents` | `400` | ✅ PASSED |
+| 18 | Validation: PUT with missing fields | `PUT /tents/:id` | `400` | ✅ PASSED |
+| 19 | Validation: GET nonexistent ID | `GET /tents/99999` | `404` | ✅ PASSED |
+| 20 | Validation: DELETE nonexistent ID | `DELETE /tents/99999` | `404` | ✅ PASSED |
 
 ---
 
-## 13. Audit Trail Explanation
+## 17. Team Member Responsibilities
 
-The TrekGear Hub audit trail architecture operates on four core principles:
-
-```
-  HTTP Request (POST / PUT / DELETE)
-                 │
-                 ▼
-       ┌───────────────────┐
-       │ Pre-Validation    │───(Fails)───► HTTP 400 Bad Request (Zero Audit Logged)
-       └───────────────────┘
-                 │ (Passes)
-                 ▼
-       ┌───────────────────┐
-       │ Tent Existence    │───(Missing)──► HTTP 404 Tent Not Found (Zero Audit Logged)
-       └───────────────────┘
-                 │ (Exists)
-                 ▼
-       ┌────────────────────────────────────────────────────────┐
-       │               SQLite ATOMIC TRANSACTION                │
-       │                                                        │
-       │   1. BEGIN TRANSACTION                                 │
-       │   2. Execute Tent SQL (INSERT / UPDATE / DELETE)       │
-       │   3. Execute Audit SQL (INSERT INTO audit (action, id) │
-       │   4. COMMIT TRANSACTION                                │
-       │                                                        │
-       │   (On error: ROLLBACK TRANSACTION)                     │
-       └────────────────────────────────────────────────────────┘
-                 │
-                 ▼
-        HTTP 200 / 201 Response
-```
-
-1. **Transactional Atomicity**:
-   All database modifications to `tents` and their associated `audit` entries are wrapped in SQLite database transactions (`BEGIN TRANSACTION` ... `COMMIT`). If either the tent operation or audit insertion encounters an error, a `ROLLBACK` is executed, preventing orphaned records.
-
-2. **Validation Safeguards**:
-   - If a request lacks required parameters (`tent_name` or `size`), it is rejected immediately with HTTP `400 Bad Request`.
-   - If an `UPDATE` or `DELETE` targets a nonexistent tent ID, it is rejected immediately with HTTP `404 Not Found`.
-   - **Zero Pollution Rule**: Validation failures and nonexistent target lookups never write to the `audit` table.
-
-3. **Persistent Identifier Retention on Deletion**:
-   When a tent is deleted via `DELETE /tents/:id`, its corresponding row in the `tents` table is removed, but the `audit` table records:
-   - `action`: `'DELETE'`
-   - `id`: The deleted `tent_id`
-   This guarantees that historical tracking preserves which ID was removed and when.
-
-4. **Newest-First Query Semantics**:
-   The `GET /audit` route retrieves records using:
-   ```sql
-   SELECT audit_id, action, id, time FROM audit ORDER BY audit_id DESC LIMIT 10
-   ```
-   This ensures that the most recent operational events always appear at index 0 of the returned array, capped at the 10 most recent actions.
-
----
-
-## 14. Mandatory Test Cases and Expected Results
-
-### Part 3: Mandatory Sequence Verification
-
-When run against a fresh/clean database (`npm run reset-db`), the exact required sequence produces:
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Client as Postman / Test Client
-    participant API as Express Router
-    participant DB as SQLite (tents & audit)
-
-    Note over Client, DB: Step 1: POST /tents
-    Client->>API: POST /tents {"tent_name": "Mountain Explorer", "size": "4-person"}
-    API->>DB: INSERT INTO tents ... & INSERT INTO audit (action: 'ADD', id: 1)
-    DB-->>API: Success (tent_id = 1, audit_id = 1)
-    API-->>Client: HTTP 201 Created (Tent Object)
-
-    Note over Client, DB: Step 2: PUT /tents/1
-    Client->>API: PUT /tents/1 {"tent_name": "Mountain Explorer Pro", "size": "6-person"}
-    API->>DB: UPDATE tents ... & INSERT INTO audit (action: 'UPDATE', id: 1)
-    DB-->>API: Success (audit_id = 2)
-    API-->>Client: HTTP 200 OK (Updated Tent Object)
-
-    Note over Client, DB: Step 3: GET /audit
-    Client->>API: GET /audit
-    API->>DB: SELECT * FROM audit ORDER BY audit_id DESC LIMIT 10
-    DB-->>API: [{audit_id: 2, action: 'UPDATE'}, {audit_id: 1, action: 'ADD'}]
-    API-->>Client: HTTP 200 OK (2 records: UPDATE first, ADD second)
-```
-
-1. **Test 1: `POST /tents`**
-   - **Payload**: `{"tent_name": "Mountain Explorer", "size": "4-person"}`
-   - **Expected Status**: `201 Created`
-   - **Actual Result**: `tent_id: 1` generated, audit record 1 (`action: 'ADD', id: 1`) created.
-
-2. **Test 2: `PUT /tents/1`**
-   - **Payload**: `{"tent_name": "Mountain Explorer Pro", "size": "6-person"}`
-   - **Expected Status**: `200 OK`
-   - **Actual Result**: Tent fields updated, audit record 2 (`action: 'UPDATE', id: 1`) created.
-
-3. **Test 3: `GET /audit`**
-   - **Expected Status**: `200 OK`
-   - **Expected Records**: Exactly 2 records; `UPDATE` first, `ADD` second.
-   - **Actual Result**:
-     ```json
-     [
-       { "audit_id": 2, "action": "UPDATE", "id": 1, "time": "..." },
-       { "audit_id": 1, "action": "ADD", "id": 1, "time": "..." }
-     ]
-     ```
-
-4. **Separate DELETE Verification**:
-   - `DELETE /tents/1` -> HTTP `200 OK` (`{"message": "Tent deleted successfully", "tent_id": 1}`).
-   - `GET /audit` -> HTTP `200 OK` (3 records total: `DELETE` first, `UPDATE` second, `ADD` third).
-
----
-
-### Full Automated Test Execution Results (20/20 Passed)
-
-The following verification matrix represents actual test execution performed on the live Express app using `node tests/test-all-member6.js`:
-
-| # | Test Case Description | Target Path & Method | Expected Code | Actual Code | Status |
-| :-: | :--- | :--- | :-: | :-: | :-: |
-| 1 | Check Trekkers implementation | `GET /trekkers` | `404 Not Found` | `404` | ✅ PASSED |
-| 2 | Initial tents list check | `GET /tents` | `200 OK` | `200` | ✅ PASSED |
-| 3 | Create valid tent | `POST /tents` | `201 Created` | `201` | ✅ PASSED |
-| 4 | Fetch single tent by ID | `GET /tents/:id` | `200 OK` | `200` | ✅ PASSED |
-| 5 | Update tent details | `PUT /tents/:id` | `200 OK` | `200` | ✅ PASSED |
-| 6 | Check Rentals implementation | `GET /rentals` | `404 Not Found` | `404` | ✅ PASSED |
-| 7 | Retrieve audit records | `GET /audit` | `200 OK` | `200` | ✅ PASSED |
-| 8 | Size query parameter check | `GET /tents?size=4-person` | `200 OK` | `200` | ✅ PASSED |
-| 9 | Search query parameter check | `GET /tents?search_q=Mountain` | `200 OK` | `200` | ✅ PASSED |
-| 10 | Delete existing tent | `DELETE /tents/:id` | `200 OK` | `200` | ✅ PASSED |
-| 11 | Validation: POST without `tent_name` | `POST /tents` | `400 Bad Request` | `400` | ✅ PASSED |
-| 12 | Validation: POST without `size` | `POST /tents` | `400 Bad Request` | `400` | ✅ PASSED |
-| 13 | Validation: POST with empty values | `POST /tents` | `400 Bad Request` | `400` | ✅ PASSED |
-| 14 | Validation: PUT with missing fields | `PUT /tents/:id` | `400 Bad Request` | `400` | ✅ PASSED |
-| 15 | Validation: GET with nonexistent ID | `GET /tents/99999` | `404 Not Found` | `404` | ✅ PASSED |
-| 16 | Validation: DELETE with nonexistent ID | `DELETE /tents/99999` | `404 Not Found` | `404` | ✅ PASSED |
-| 17 | Mandatory Test 1: Add tent | `POST /tents` | `201 Created` | `201` | ✅ PASSED |
-| 18 | Mandatory Test 2: Update same tent | `PUT /tents/:id` | `200 OK` | `200` | ✅ PASSED |
-| 19 | Mandatory Test 3: Audit order (UPDATE then ADD)| `GET /audit` | `200 OK` | `200` | ✅ PASSED |
-| 20 | Separate DELETE audit record check | `DELETE /tents/:id` + `GET /audit` | `200 OK` | `200` | ✅ PASSED |
-
----
-
-## 15. Team Member Responsibilities
-
-| Member | Role | Key Deliverables & Responsibilities |
-| :--- | :--- | :--- |
-| **Member 1** | Trekker Profile Management | Design and implement `/trekkers` endpoints for hiker registration, contact data, and KYC verification. |
-| **Member 2** | Tent Catalog & Specifications | Tent product definitions, inventory sizing, status attributes, and query filtering (`size`, `search_q`). |
-| **Member 3** | Rental Operations Management | Rental booking lifecycle (`/rentals`), gear checkout, return inspections, and duration management. |
-| **Member 4** | Database Architecture & Schema | SQLite relational database design, foreign key constraints, connection pooling, and performance tuning. |
-| **Member 5** | Audit Trail Subsystem | Automatic transaction-bound logging (`ADD`, `UPDATE`, `DELETE`), `GET /audit` route, atomicity with rollback. |
-| **Member 6** | Quality Assurance & Documentation | **Postman Collection authoring (`TrekGear Hub API Testing`), complete API verification & validation testing, comprehensive `README.md` documentation, and GitHub repository preparation.** |
+| Member | Role | Key Deliverables & Responsibilities | Member Name |
+| :---: | :--- | :--- | :--- |
+| **Member 1** | Trekker Profile Management | Design and implement `/trekkers` endpoints for hiker registration and lookups | *Member 1* |
+| **Member 2** | Tent Catalog & Specifications | Tent product definitions, inventory sizing, status attributes, and query filtering (`size`, `search_q`) | *Member 2* |
+| **Member 3** | Rental Operations Management | Rental booking lifecycle (`/rentals`) and the relational Join Endpoint | *Member 3* |
+| **Member 4** | Database Architecture & Schema | SQLite relational database design, foreign key constraints, connection pooling, and performance tuning | *Member 4* |
+| **Member 5** | Audit Trail Subsystem | Automatic transaction-bound logging (`ADD`, `UPDATE`, `DELETE`), `GET /audit` route, atomicity with rollback | *Member 5* |
+| **Member 6** | Quality Assurance & Documentation | **Postman Collection authoring (`TrekGear Hub API Testing`), complete API verification & validation testing, comprehensive `README.md` documentation, and browser verification endpoints** | **Mahitha Reddy (reddymahitha2008)** |
 
 ---
 

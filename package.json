@@ -1,22 +1,22 @@
 {
   "name": "trekgear-hub",
   "version": "1.0.0",
-  "description": "TrekGear Hub - Trekking Gear Rental Management System with Audit Trail",
+  "description": "TrekGear Hub - Trekking Gear Rental Management System with Relational Join Endpoints and Audit Trail",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "test": "node tests/run-tests.js",
-    "test:member6": "node tests/test-all-member6.js",
     "reset-db": "node scripts/reset-db.js"
   },
   "keywords": [
     "express",
     "sqlite3",
     "audit-trail",
+    "join-endpoint",
     "trekking-gear",
     "postman-testing"
   ],
-  "author": "TrekGear Hub Team (Member 6: Postman Testing & README Documentation)",
+  "author": "Mahitha Reddy (Member 6: Postman Testing & README Documentation)",
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.2",
