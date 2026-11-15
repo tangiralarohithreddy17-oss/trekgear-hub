@@ -386,14 +386,14 @@ All 20 test cases pass with a 100% pass rate (`npm test`):
 
 ## 17. Team Member Responsibilities
 
-| Member | Role | Key Deliverables & Responsibilities | Member Name |
-| :---: | :--- | :--- | :--- |
-| **Member 1** | Trekker Profile Management | Design and implement `/trekkers` endpoints for hiker registration and lookups | **T. Rohith Reddy** |
-| **Member 2** | Tent Catalog & Specifications | Tent product definitions, inventory sizing, status attributes, and query filtering (`size`, `search_q`) | **V. Akhilesh** |
-| **Member 3** | Rental Operations Management | Rental booking lifecycle (`/rentals`) and the relational Join Endpoint | **Reddi Leela Syamala** |
-| **Member 4** | Database Architecture & Schema | SQLite relational database design, foreign key constraints, connection pooling, and performance tuning | **Srihari** |
-| **Member 5** | Audit Trail Subsystem | Automatic transaction-bound logging (`ADD`, `UPDATE`, `DELETE`), `GET /audit` route, atomicity with rollback | **V. Yashwanth Reddy** |
-| **Member 6** | Quality Assurance & Documentation | **Postman Collection authoring (`TrekGear Hub API Testing`), complete API verification & validation testing, comprehensive `README.md` documentation, and browser verification endpoints** | **Reddy Mahitha** |
+| Member | Member Name | Main Responsibility During Integration |
+| :---: | :--- | :--- |
+| **Member 1** | **T. Rohith Reddy** | Combine server and route files; start the final application |
+| **Member 2** | **V. Akhilesh** | Connect the database and verify all tables |
+| **Member 3** | **Reddi Leela Syamala** | Integrate and verify CRUD and JOIN APIs |
+| **Member 4** | **Srihari** | Integrate validation and search |
+| **Member 5** | **V. Yashwanth Reddy** | Verify audit logging for add, update, and delete |
+| **Member 6** | **Reddy Mahitha** | Run the complete Postman test collection and update README |
 
 ---
 
