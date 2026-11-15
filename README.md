@@ -398,3 +398,35 @@ All 20 test cases pass with a 100% pass rate (`npm test`):
 ---
 
 *TrekGear Hub — Developed collaboratively for Group Assignment.*
+
+---
+
+## Screenshots
+
+### 1. API Root & Health Check
+![API Root & Health Check](screenshots/01-api-root-health-check.png)
+
+### 2. Get All Trekkers
+![Get All Trekkers](screenshots/02-get-all-trekkers.png)
+
+### 3. Get All Tents
+![Get All Tents](screenshots/03-get-all-tents.png)
+
+### 4. Get Tent by ID
+![Get Tent by ID](screenshots/04-get-tent-by-id.png)
+
+### 5. Create Tent (POST)
+![Create Tent](screenshots/05-post-create-tent.png)
+
+### 6. Update Tent (PUT)
+![Update Tent](screenshots/06-put-update-tent.png)
+
+### 7. Delete Tent (DELETE)
+![Delete Tent](screenshots/07-delete-tent-by-id.png)
+
+### 8. Get All Rentals (JOIN)
+![Get All Rentals](screenshots/08-get-all-rentals.png)
+
+### 9. Get Audit Logs
+![Get Audit Logs](screenshots/09-get-audit-logs.png)
+
