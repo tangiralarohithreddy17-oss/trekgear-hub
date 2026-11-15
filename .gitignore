@@ -1,6 +1,17 @@
+# Dependencies
 node_modules/
-tests/test_trekgear.db
-tests/test_trekgear.db-journal
-trekgear.db-journal
+
+# SQLite test & temporary databases
+*.db-journal
+tests/*.db
+tests/*.db-journal
+tests/test_*.db
+test_*.db
+tests/member6_verification_results.json
+
+# Operating System files
 .DS_Store
+Thumbs.db
+
+# Utility batch files
 push.bat

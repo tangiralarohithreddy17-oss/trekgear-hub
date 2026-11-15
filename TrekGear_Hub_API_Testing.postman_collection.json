@@ -1,0 +1,857 @@
+{
+  "info": {
+    "_postman_id": "trekgear-hub-api-testing-m6",
+    "name": "TrekGear Hub API Testing",
+    "description": "Comprehensive Postman API Testing Collection for TrekGear Hub - Trekking Gear Rental Management System. Maintained by Member 6: Postman Testing and README Documentation. Covers Core Endpoints, Validation Tests, and Mandatory Audit Trail Verification.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "tent_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "audit_tent_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Core API Endpoints (Part 1)",
+      "description": "The 10 core API requests specified for TrekGear Hub testing.",
+      "item": [
+        {
+          "name": "1. GET /trekkers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code check - Unimplemented route returns 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message confirms endpoint not found\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.eql(\"Endpoint not found\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trekkers",
+              "host": ["{{baseUrl}}"],
+              "path": ["trekkers"]
+            },
+            "description": "Endpoint: GET /trekkers\n\nImplementation Status: NOT YET IMPLEMENTED.\n\nDescription: Intended for fetching registered trekkers. Route is currently unmounted in `src/app.js`, returning HTTP 404 with `{\"error\": \"Endpoint not found\"}`."
+          },
+          "response": []
+        },
+        {
+          "name": "2. GET /tents",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array of tents\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tents",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents"]
+            },
+            "description": "Endpoint: GET /tents\n\nImplementation Status: IMPLEMENTED & WORKING.\n\nDescription: Retrieves all tents from the catalog, ordered by tent_id ascending."
+          },
+          "response": []
+        },
+        {
+          "name": "3. GET /tents/:id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK or 404 Not Found\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Response contains tent object with valid properties\", function () {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.have.property(\"tent_id\");",
+                  "        pm.expect(jsonData).to.have.property(\"tent_name\");",
+                  "        pm.expect(jsonData).to.have.property(\"size\");",
+                  "        pm.expect(jsonData).to.have.property(\"status\");",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tents/{{tent_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents", "{{tent_id}}"]
+            },
+            "description": "Endpoint: GET /tents/:id\n\nImplementation Status: IMPLEMENTED & WORKING.\n\nDescription: Fetches single tent details by ID. Returns 200 if found, 404 if nonexistent."
+          },
+          "response": []
+        },
+        {
+          "name": "4. POST /tents",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Created tent has valid properties\", function () {",
+                  "    pm.expect(jsonData).to.have.property(\"tent_id\");",
+                  "    pm.expect(jsonData.tent_name).to.eql(\"Mountain Explorer\");",
+                  "    pm.expect(jsonData.size).to.eql(\"4-person\");",
+                  "});",
+                  "",
+                  "if (jsonData.tent_id) {",
+                  "    pm.collectionVariables.set(\"tent_id\", jsonData.tent_id.toString());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tent_name\": \"Mountain Explorer\",\n  \"size\": \"4-person\",\n  \"status\": \"available\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tents",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents"]
+            },
+            "description": "Endpoint: POST /tents\n\nImplementation Status: IMPLEMENTED & WORKING.\n\nDescription: Adds a new tent to the inventory. Automatically writes an 'ADD' record to the audit table within an atomic SQLite transaction."
+          },
+          "response": []
+        },
+        {
+          "name": "5. PUT /tents/:id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Updated tent reflects modified values\", function () {",
+                  "    pm.expect(jsonData.tent_name).to.eql(\"Mountain Explorer Pro\");",
+                  "    pm.expect(jsonData.size).to.eql(\"6-person\");",
+                  "    pm.expect(jsonData.status).to.eql(\"rented\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tent_name\": \"Mountain Explorer Pro\",\n  \"size\": \"6-person\",\n  \"status\": \"rented\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tents/{{tent_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents", "{{tent_id}}"]
+            },
+            "description": "Endpoint: PUT /tents/:id\n\nImplementation Status: IMPLEMENTED & WORKING.\n\nDescription: Updates an existing tent by ID. Automatically writes an 'UPDATE' record to the audit table within an atomic SQLite transaction."
+          },
+          "response": []
+        },
+        {
+          "name": "6. DELETE /tents/:id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Success message returned with tent_id\", function () {",
+                  "    pm.expect(jsonData.message).to.eql(\"Tent deleted successfully\");",
+                  "    pm.expect(jsonData).to.have.property(\"tent_id\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tents/{{tent_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents", "{{tent_id}}"]
+            },
+            "description": "Endpoint: DELETE /tents/:id\n\nImplementation Status: IMPLEMENTED & WORKING.\n\nDescription: Deletes a tent by ID. Automatically writes a 'DELETE' record to the audit table within an atomic SQLite transaction."
+          },
+          "response": []
+        },
+        {
+          "name": "7. GET /rentals",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code check - Unimplemented route returns 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message confirms endpoint not found\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.eql(\"Endpoint not found\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rentals",
+              "host": ["{{baseUrl}}"],
+              "path": ["rentals"]
+            },
+            "description": "Endpoint: GET /rentals\n\nImplementation Status: NOT YET IMPLEMENTED.\n\nDescription: Intended for rental booking records. Route is currently unmounted in `src/app.js`, returning HTTP 404 with `{\"error\": \"Endpoint not found\"}`."
+          },
+          "response": []
+        },
+        {
+          "name": "8. GET /audit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Audit response is an array of max 10 records\", function () {",
+                  "    pm.expect(jsonData).to.be.an(\"array\");",
+                  "    pm.expect(jsonData.length).to.be.at.most(10);",
+                  "});",
+                  "",
+                  "if (jsonData.length > 1) {",
+                  "    pm.test(\"Audit records ordered newest first (descending audit_id)\", function () {",
+                  "        for (var i = 0; i < jsonData.length - 1; i++) {",
+                  "            pm.expect(jsonData[i].audit_id).to.be.above(jsonData[i+1].audit_id);",
+                  "        }",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/audit",
+              "host": ["{{baseUrl}}"],
+              "path": ["audit"]
+            },
+            "description": "Endpoint: GET /audit\n\nImplementation Status: IMPLEMENTED & WORKING.\n\nDescription: Retrieves the 10 most recent audit records sorted newest first (`ORDER BY audit_id DESC LIMIT 10`). Returns fields: `audit_id`, `action`, `id`, `time`."
+          },
+          "response": []
+        },
+        {
+          "name": "9. GET /tents?size=4-person",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array of tents\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tents?size=4-person",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents"],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "4-person"
+                }
+              ]
+            },
+            "description": "Endpoint: GET /tents?size=4-person\n\nImplementation Status: ROUTE WORKING (Query filter not implemented in router).\n\nDescription: Sends a query string to filter tents by size. The server responds with HTTP 200 OK and returns the tents list (query parameter filtering is not currently applied by the router SQL query)."
+          },
+          "response": []
+        },
+        {
+          "name": "10. GET /tents?search_q=Mountain",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array of tents\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tents?search_q=Mountain",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents"],
+              "query": [
+                {
+                  "key": "search_q",
+                  "value": "Mountain"
+                }
+              ]
+            },
+            "description": "Endpoint: GET /tents?search_q=Mountain\n\nImplementation Status: ROUTE WORKING (Query search not implemented in router).\n\nDescription: Sends a query string to search tents by keyword. The server responds with HTTP 200 OK and returns the tents list (query keyword filtering is not currently applied by the router SQL query)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Validation Tests (Part 2)",
+      "description": "Invalid requests testing error handling and status code validation.",
+      "item": [
+        {
+          "name": "Validation: POST without tent_name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error specifies tent_name is required\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.eql(\"tent_name is required\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"size\": \"4-person\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tents",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents"]
+            },
+            "description": "Testing POST /tents without tent_name. Expected: HTTP 400 with `{\"error\": \"tent_name is required\"}`. No audit entry created."
+          },
+          "response": []
+        },
+        {
+          "name": "Validation: POST without size",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error specifies size is required\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.eql(\"size is required\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tent_name\": \"Glacier Peak\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tents",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents"]
+            },
+            "description": "Testing POST /tents without size. Expected: HTTP 400 with `{\"error\": \"size is required\"}`. No audit entry created."
+          },
+          "response": []
+        },
+        {
+          "name": "Validation: POST with empty values",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error confirms validation rejection\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.eql(\"tent_name is required\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tent_name\": \"   \",\n  \"size\": \"   \"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tents",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents"]
+            },
+            "description": "Testing POST /tents with whitespace-only values. Expected: HTTP 400 with `{\"error\": \"tent_name is required\"}`. No audit entry created."
+          },
+          "response": []
+        },
+        {
+          "name": "Validation: PUT with missing fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error confirms field is required\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.eql(\"tent_name is required\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"size\": \"6-person\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tents/{{tent_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents", "{{tent_id}}"]
+            },
+            "description": "Testing PUT /tents/:id with missing tent_name. Expected: HTTP 400 with `{\"error\": \"tent_name is required\"}`. No audit entry created."
+          },
+          "response": []
+        },
+        {
+          "name": "Validation: GET with nonexistent ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message is 'Tent not found'\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.eql(\"Tent not found\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tents/99999",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents", "99999"]
+            },
+            "description": "Testing GET /tents/99999. Expected: HTTP 404 with `{\"error\": \"Tent not found\"}`."
+          },
+          "response": []
+        },
+        {
+          "name": "Validation: DELETE with nonexistent ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message is 'Tent not found'\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.eql(\"Tent not found\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tents/99999",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents", "99999"]
+            },
+            "description": "Testing DELETE /tents/99999. Expected: HTTP 404 with `{\"error\": \"Tent not found\"}`. No audit entry created."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Audit Trail Sequence (Part 3)",
+      "description": "Exact required sequence: Test 1 (POST 201) -> Test 2 (PUT 200) -> Test 3 (GET /audit: 2 records, UPDATE first, ADD second), followed by DELETE audit verification.",
+      "item": [
+        {
+          "name": "Test 1: POST /tents (Audit sequence creation)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Expected Status: 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Tent successfully created with ID\", function () {",
+                  "    pm.expect(jsonData).to.have.property(\"tent_id\");",
+                  "    pm.expect(jsonData.tent_name).to.eql(\"Mountain Explorer\");",
+                  "    pm.expect(jsonData.size).to.eql(\"4-person\");",
+                  "});",
+                  "",
+                  "if (jsonData.tent_id) {",
+                  "    pm.collectionVariables.set(\"audit_tent_id\", jsonData.tent_id.toString());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tent_name\": \"Mountain Explorer\",\n  \"size\": \"4-person\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tents",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents"]
+            },
+            "description": "Test 1 in sequence: POST /tents. Expected Status: 201. Automatically logs 'ADD' audit entry."
+          },
+          "response": []
+        },
+        {
+          "name": "Test 2: PUT /tents/1 (Audit sequence update)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Expected Status: 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Tent updated to new name and size\", function () {",
+                  "    pm.expect(jsonData.tent_name).to.eql(\"Mountain Explorer Pro\");",
+                  "    pm.expect(jsonData.size).to.eql(\"6-person\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tent_name\": \"Mountain Explorer Pro\",\n  \"size\": \"6-person\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tents/{{audit_tent_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents", "{{audit_tent_id}}"]
+            },
+            "description": "Test 2 in sequence: PUT /tents/{{audit_tent_id}}. Expected Status: 200. Automatically logs 'UPDATE' audit entry."
+          },
+          "response": []
+        },
+        {
+          "name": "Test 3: GET /audit (Verify 2 records: UPDATE first, ADD second)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Expected Status: 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "var targetId = parseInt(pm.collectionVariables.get(\"audit_tent_id\"), 10);",
+                  "",
+                  "pm.test(\"Expected: Two audit records (on clean database)\", function () {",
+                  "    pm.expect(jsonData).to.be.an(\"array\");",
+                  "    pm.expect(jsonData.length).to.eql(2);",
+                  "});",
+                  "",
+                  "pm.test(\"Expected: First record is UPDATE\", function () {",
+                  "    pm.expect(jsonData[0].action).to.eql(\"UPDATE\");",
+                  "    pm.expect(jsonData[0].id).to.eql(targetId);",
+                  "    pm.expect(jsonData[0]).to.have.property(\"time\");",
+                  "});",
+                  "",
+                  "pm.test(\"Expected: Second record is ADD\", function () {",
+                  "    pm.expect(jsonData[1].action).to.eql(\"ADD\");",
+                  "    pm.expect(jsonData[1].id).to.eql(targetId);",
+                  "    pm.expect(jsonData[1]).to.have.property(\"time\");",
+                  "});",
+                  "",
+                  "pm.test(\"Newest first verification: rec[0].audit_id > rec[1].audit_id\", function () {",
+                  "    pm.expect(jsonData[0].audit_id).to.be.above(jsonData[1].audit_id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/audit",
+              "host": ["{{baseUrl}}"],
+              "path": ["audit"]
+            },
+            "description": "Test 3 in sequence: GET /audit.\n\nExpected:\n- Status 200\n- Two audit records (on clean/isolated test database)\n- UPDATE first\n- ADD second"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Audit Logging: DELETE /tents/:id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Deletion confirmed in response\", function () {",
+                  "    pm.expect(jsonData.message).to.eql(\"Tent deleted successfully\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tents/{{audit_tent_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tents", "{{audit_tent_id}}"]
+            },
+            "description": "Test DELETE audit logging. Deleting the test tent should append a DELETE audit record."
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Audit Logging: GET /audit (Verify DELETE logged)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "var targetId = parseInt(pm.collectionVariables.get(\"audit_tent_id\"), 10);",
+                  "",
+                  "pm.test(\"Audit contains 3 records (DELETE, UPDATE, ADD)\", function () {",
+                  "    pm.expect(jsonData.length).to.eql(3);",
+                  "    pm.expect(jsonData[0].action).to.eql(\"DELETE\");",
+                  "    pm.expect(jsonData[0].id).to.eql(targetId);",
+                  "    pm.expect(jsonData[1].action).to.eql(\"UPDATE\");",
+                  "    pm.expect(jsonData[2].action).to.eql(\"ADD\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/audit",
+              "host": ["{{baseUrl}}"],
+              "path": ["audit"]
+            },
+            "description": "Verifying that DELETE record appears at top index 0, followed by UPDATE and ADD."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
+

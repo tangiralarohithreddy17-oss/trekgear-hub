@@ -6,15 +6,17 @@
   "scripts": {
     "start": "node server.js",
     "test": "node tests/run-tests.js",
+    "test:member6": "node tests/test-all-member6.js",
     "reset-db": "node scripts/reset-db.js"
   },
   "keywords": [
     "express",
     "sqlite3",
     "audit-trail",
-    "trekking-gear"
+    "trekking-gear",
+    "postman-testing"
   ],
-  "author": "Member 5",
+  "author": "TrekGear Hub Team (Member 6: Postman Testing & README Documentation)",
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.2",
