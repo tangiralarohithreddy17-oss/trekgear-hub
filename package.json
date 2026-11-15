@@ -16,7 +16,7 @@
     "trekking-gear",
     "postman-testing"
   ],
-  "author": "Mahitha Reddy (Member 6: Postman Testing & README Documentation)",
+  "author": "Reddy Mahitha (Member 6: Postman Testing & README Documentation)",
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.2",

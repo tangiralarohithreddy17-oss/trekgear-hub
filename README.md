@@ -388,12 +388,12 @@ All 20 test cases pass with a 100% pass rate (`npm test`):
 
 | Member | Role | Key Deliverables & Responsibilities | Member Name |
 | :---: | :--- | :--- | :--- |
-| **Member 1** | Trekker Profile Management | Design and implement `/trekkers` endpoints for hiker registration and lookups | *Member 1* |
-| **Member 2** | Tent Catalog & Specifications | Tent product definitions, inventory sizing, status attributes, and query filtering (`size`, `search_q`) | *Member 2* |
-| **Member 3** | Rental Operations Management | Rental booking lifecycle (`/rentals`) and the relational Join Endpoint | *Member 3* |
-| **Member 4** | Database Architecture & Schema | SQLite relational database design, foreign key constraints, connection pooling, and performance tuning | *Member 4* |
-| **Member 5** | Audit Trail Subsystem | Automatic transaction-bound logging (`ADD`, `UPDATE`, `DELETE`), `GET /audit` route, atomicity with rollback | *Member 5* |
-| **Member 6** | Quality Assurance & Documentation | **Postman Collection authoring (`TrekGear Hub API Testing`), complete API verification & validation testing, comprehensive `README.md` documentation, and browser verification endpoints** | **Mahitha Reddy (reddymahitha2008)** |
+| **Member 1** | Trekker Profile Management | Design and implement `/trekkers` endpoints for hiker registration and lookups | **T. Rohith Reddy** |
+| **Member 2** | Tent Catalog & Specifications | Tent product definitions, inventory sizing, status attributes, and query filtering (`size`, `search_q`) | **V. Akhilesh** |
+| **Member 3** | Rental Operations Management | Rental booking lifecycle (`/rentals`) and the relational Join Endpoint | **Reddi Leela Syamala** |
+| **Member 4** | Database Architecture & Schema | SQLite relational database design, foreign key constraints, connection pooling, and performance tuning | **Srihari** |
+| **Member 5** | Audit Trail Subsystem | Automatic transaction-bound logging (`ADD`, `UPDATE`, `DELETE`), `GET /audit` route, atomicity with rollback | **V. Yashwanth Reddy** |
+| **Member 6** | Quality Assurance & Documentation | **Postman Collection authoring (`TrekGear Hub API Testing`), complete API verification & validation testing, comprehensive `README.md` documentation, and browser verification endpoints** | **Reddy Mahitha** |
 
 ---
 
